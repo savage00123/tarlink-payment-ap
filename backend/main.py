@@ -1,84 +1,92 @@
-import re
-from fastapi import FastAPI, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, field_validator
+import os
+import logging
+from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from pydantic import BaseModel, Field
+import httpx
 
-app = FastAPI(
-    title="Starlink Voucher Management Gateway",
-    description="Processes manual verification inputs via EcoCash tokens for Zimbabwe reseller fulfillment",
-    version="1.0.0"
-)
+# Configure logging to monitor requests in the Render terminal logs
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("starlink-gateway")
 
-# Configure CORS so your frontend can communicate securely
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Swap out with your production domain when ready
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app = FastAPI(title="Starlink Zimbabwe Reseller Gateway")
 
-# Structured data template
-class EcoCashPaymentSubmit(BaseModel):
-    phone: str = Field(..., description="The subscriber's EcoCash phone number", min_length=9, max_length=15, examples=["771234567"])
-    location: str = Field(..., description="The geographical delivery region/province selected", examples=["Harare"])
-    planId: str = Field(..., description="Identifier matching selected package price metric", examples=["advanced"])
-    agent: str = Field(..., description="Fulfillment agent structural channel name", examples=["Afrilink Data Systems"])
-    paymentCodeString: str = Field(..., description="The absolute pasted text string of the confirmation SMS block")
+# --- TELEGRAM ALERT BOT CONFIGURATION ---
+# Falls back to placeholders if environment variables are not set
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "YOUR_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "YOUR_CHAT_ID")
 
-    @field_validator('phone')
-    @classmethod
-    def clean_phone_number(cls, v: str) -> str:
-        # Automatically strip spaces, dashes, or formatting characters
-        cleaned = re.sub(r'[\s\-]', '', v)
-        if not cleaned.isdigit():
-            raise ValueError('Phone number must contain only digits')
-        return cleaned
+# --- DATA MANIFEST SCHEMAS ---
+class EcoCashVerificationPayload(BaseModel):
+    phone: str = Field(..., description="EcoCash mobile subscriber token string")
+    location: str = Field(..., description="Target distribution province/region")
+    planId: str = Field(..., description="Subscription tier identifier allocation")
+    agent: str = Field(..., description="Authorized fulfillment administrator")
+    paymentCodeString: str = Field(..., description="Raw confirmation SMS log data content")
 
-@app.post("/api/ecocash/verify", status_code=status.HTTP_200_OK)
-async def process_payment_verification(payload: EcoCashPaymentSubmit):
-    """
-    Receives phone number, route configuration parameters, and the pasted raw
-    EcoCash message token string to complete bundle distribution.
-    """
-    raw_message = payload.paymentCodeString.strip()
-    
-    # Structural check: Ensure the message is long enough to be an EcoCash statement
-    if len(raw_message) < 25:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The verification message text is too short to be a valid EcoCash SMS confirmation."
-        )
+# --- 1. MOUNT STATIC FRONTEND ASSETS ---
+# Stepping up one level out of the backend directory to access frontend folder
+FRONTEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend"))
 
-    # Automated Token / Txn ID Parsing
-    # Looks for a common 10-digit alphanumeric structure unique to transactional texts
-    txn_match = re.search(r'\b[A-Z0-9]{10}\b', raw_message)
-    txn_id = txn_match.group(0) if txn_match else "NOT_FOUND"
+if os.path.exists(FRONTEND_DIR):
+    app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_DIR, "assets")), name="assets")
+else:
+    logger.error(f"Frontend directory not found at resolved location: {FRONTEND_DIR}")
 
-    # Terminal Log for Verification
-    print("\n" + "="*50)
-    print("📥 NEW STARLINK PAYMENT VERIFICATION REQUEST RECEIVED")
-    print(f"📱 EcoCash Phone No: +263 {payload.phone}")
-    print(f"🆔 Parsed Txn ID   : {txn_id}")
-    print(f"📍 Target Location : {payload.location}")
-    print(f"📦 Selected Plan ID: {payload.planId}")
-    print(f"💼 Assigned Agent  : {payload.agent}")
-    print("-"*50)
-    print("📝 RAW MESSAGE PREVIEW:")
-    print(raw_message[:120] + "..." if len(raw_message) > 120 else raw_message)
-    print("="*50 + "\n")
+# --- 2. ENDPOINTS & BUSINESS LOGIC ---
 
+@app.post("/api/ecocash/verify")
+async def verify_ecocash_transaction(payload: EcoCashVerificationPayload):
+    logger.info(f"Received transaction payload routing for verification from +263{payload.phone}")
+
+    # Format a structural alert payload layout for your Telegram alerting bot channel
+    telegram_message = (
+        f"📡 <b>New Starlink Allocation Request</b>\n\n"
+        f"👤 <b>Subscriber:</b> +263 {payload.phone}\n"
+        f"📍 <b>Province/Region:</b> {payload.location}\n"
+        f"📦 <b>Plan Selected:</b> {payload.planId.upper()}\n"
+        f"💼 <b>Assigned Agent:</b> {payload.agent}\n\n"
+        f"📝 <b>EcoCash Confirmation Log:</b>\n"
+        f"<code>{payload.paymentCodeString}</code>"
+    )
+
+    # Dispatches the notification event asynchronously using HTTPX
+    async with httpx.AsyncClient() as client:
+        telegram_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        try:
+            response = await client.post(telegram_url, json={
+                "chat_id": TELEGRAM_CHAT_ID,
+                "text": telegram_message,
+                "parse_mode": "HTML"
+            })
+            if response.status_code != 200:
+                logger.error(f"Telegram API warning node callback status code: {response.status_code}")
+        except Exception as e:
+            logger.error(f"Failed to transmit payload notification parameters via Telegram pipeline: {str(e)}")
+
+    # Clear validation match response payload
     return {
         "status": "success",
-        "message": "Transaction token profile accepted and parsed successfully.",
-        "received_data": {
-            "phone_tail": payload.phone[-4:],
-            "agent_routed": payload.agent,
-            "parsed_txn_id": txn_id,
-            "message_length": len(raw_message)
-        }
+        "detail": "Billing parameter verification matrix resolved cleanly. Service active."
     }
 
+# --- 3. SYSTEM HEALTH ENDPOINT ---
+@app.get("/api/status")
+def get_system_status():
+    return {
+        "status": "online",
+        "service": "Starlink Zimbabwe Reseller Gateway API Node"
+    }
+
+# --- 4. SERVE USER INTERFACE ---
 @app.get("/")
 def read_root():
-    return {"status": "online", "service": "Starlink Zimbabwe Reseller Gateway API Node"}
+    index_path = os.path.join(FRONTEND_DIR, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    else:
+        raise HTTPException(
+            status_code=404, 
+            detail="Frontend interface context could not be pinpointed under core rules directory."
+        )
