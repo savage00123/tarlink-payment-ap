@@ -1,172 +1,133 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Reseller Subscription Gateway</title>
-    
-    <script type="module" crossorigin src="/assets/index-aUmY9vAb.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-CCaBMeSA.css">
-    
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starlink Zimbabwe Reseller Gateway</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
 
-    <style>
-      .card-shadow {
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-      }
-      .package-card, .agent-card {
-        cursor: pointer;
-        transition: all 0.2s ease-in-out;
-        border: 2px solid transparent;
-      }
-      .package-card:hover, .agent-card:hover {
-        transform: translateY(-2px);
-      }
-      .package-card.selected, .agent-card.selected {
-        border-color: #2563eb;
-        background-color: #f8fafc;
-      }
-      .popular-badge {
-        position: absolute;
-        top: -10px;
-        right: 20px;
-        background-color: #3b82f6;
-        color: white;
-        font-size: 0.75rem;
-        font-weight: 600;
-        padding: 2px 8px;
-        border-radius: 9999px;
-      }
-      .package-hint {
-        font-size: 0.75rem;
-        color: #2563eb;
-        font-weight: 500;
-      }
-      .spinner {
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid #2563eb;
-        border-radius: 50%;
-        width: 48px;
-        height: 48px;
-        animation: spin 1s linear infinite;
-        margin: 2rem auto;
-      }
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    </style>
-  </head>
-  <body class="min-h-screen bg-gray-50 flex flex-col">
-    
-    <div id="root" class="flex flex-col min-h-screen">
-      <header class="bg-white shadow-sm">
-        <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div class="cursor-pointer" onclick="navigateToPlans()">
-            <h1 class="text-xl font-bold tracking-wide text-gray-900">STARLINK</h1>
-            <p class="text-xs text-gray-500">Zimbabwe Authorized Reseller</p>
-          </div>
-          <nav class="flex items-center gap-4 text-sm">
-            <a href="#" class="text-gray-600 hover:text-gray-900">Network Status</a>
-            <a href="#" class="text-blue-600 font-medium" onclick="navigateToPlans(); return false;">ZW Packages</a>
-          </nav>
-        </div>
-      </header>
-
-      <main class="max-w-5xl mx-auto px-4 py-8 flex-1 w-full">
-        
-        <div id="plans-page-view">
-          <div class="bg-white rounded-xl card-shadow p-6 mb-6">
-            <div class="flex items-start justify-between mb-2">
-              <div>
-                <p class="text-xs uppercase tracking-wider text-blue-600 font-semibold">Zimbabwe Regional Plans</p>
-                <h2 class="text-2xl font-bold text-gray-900">Select Your Subscription Tier</h2>
-              </div>
-              <i class="fas fa-satellite-dish text-3xl text-blue-500"></i>
+    <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl max-w-md w-full border border-slate-700">
+        <div class="text-center mb-8">
+            <div class="inline-block bg-blue-600 text-white p-3 rounded-full mb-3 shadow-lg shadow-blue-500/30">
+                📡
             </div>
-            <p class="text-sm text-gray-600">
-              Choose your plan allocation below to begin the secure transaction workflow.
-            </p>
-          </div>
-
-          <div id="plans-container" class="grid md:grid-cols-2 gap-4"></div>
+            <h1 class="text-2xl font-bold tracking-tight text-white">Starlink Zimbabwe</h1>
+            <p class="text-slate-400 text-sm mt-1">Authorized Reseller Activation Gateway</p>
         </div>
 
-        <div id="ecocash-payment-view" class="hidden max-w-md mx-auto bg-white rounded-xl p-6 card-shadow my-6">
-          <div class="text-center mb-6">
-            <h1 class="text-4xl font-bold">
-              <span class="text-blue-600">Eco</span><span class="text-red-500">Cash</span>
-            </h1>
-            <p class="text-xs text-gray-400 uppercase tracking-widest mt-1">Mobile Payment Gateway</p>
-          </div>
+        <div id="statusBanner" class="hidden mb-6 p-4 rounded-xl text-sm font-medium text-center"></div>
 
-          <div class="border-b border-gray-100 mb-6 pb-4">
-            <div class="flex justify-between text-sm mb-1">
-              <span class="text-gray-500">Selected Plan:</span>
-              <span id="checkout-plan-name" class="font-semibold text-gray-900">-</span>
-            </div>
-            <div class="flex justify-between text-sm font-bold">
-              <span class="text-gray-900">Amount Due:</span>
-              <span id="checkout-plan-price" class="text-blue-600">-</span>
-            </div>
-          </div>
-
-          <div class="mb-4">
-            <label class="block text-gray-600 text-xs font-semibold mb-2 uppercase tracking-wide">Select Location / Province</label>
-            <div class="relative">
-              <select id="client-location-select" class="w-full border-2 border-gray-200 rounded-xl p-3 text-gray-800 font-medium bg-white focus:outline-none focus:border-blue-500 transition appearance-none">
-                <option value="" disabled selected>Choose your region...</option>
-                <option value="Harare">Harare</option>
-                <option value="Bulawayo">Bulawayo</option>
-                <option value="Manicaland">Manicaland</option>
-                <option value="Mashonaland Central">Mashonaland Central</option>
-                <option value="Mashonaland East">Mashonaland East</option>
-                <option value="Mashonaland West">Mashonaland West</option>
-                <option value="Masvingo">Masvingo</option>
-                <option value="Matabeleland North">Matabeleland North</option>
-                <option value="Matabeleland South">Matabeleland South</option>
-                <option value="Midlands">Midlands</option>
-              </select>
-              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                <i class="fas fa-chevron-down text-xs"></i>
-              </div>
-            </div>
-          </div>
-
-          <div class="mb-6">
-            <label class="block text-gray-600 text-xs font-semibold mb-2 uppercase tracking-wide">EcoCash Mobile Number</label>
-            <div class="border-2 border-gray-200 rounded-xl p-3 flex items-center gap-3 bg-white focus-within:border-blue-500 transition">
-              <span class="text-2xl select-none">🇿🇼</span>
-              <span class="text-lg text-gray-900 font-bold border-r border-gray-300 pr-3 select-none">+263</span>
-              <input id="client-phone-input" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="10" placeholder="771234567" class="w-full text-lg text-gray-800 font-medium placeholder-gray-300 focus:outline-none bg-transparent">
-            </div>
-          </div>
-
-          <button id="pay-submit-btn" disabled onclick="transitionToProcessing('agent-select')" class="w-full py-4 bg-gray-300 text-white font-bold rounded-xl cursor-not-allowed transition duration-200 shadow-sm uppercase tracking-wider">
-            Continue to Agent Selection
-          </button>
-        </div>
-
-        <div id="agent-selection-view" class="hidden max-w-md mx-auto my-6">
-          <div class="bg-white rounded-xl card-shadow p-6 mb-4">
-            <h3 class="text-lg font-bold text-gray-900 mb-1">Select Starlink Fulfillment Agent</h3>
-            <p class="text-xs text-gray-500">Choose an authorized regional administrator to complete your bundle routing allocation.</p>
-          </div>
-
-          <div class="space-y-3 mb-6" id="agents-container">
-            <div onclick="selectAgent('agent1', 'Afrilink Data Systems')" id="agent-agent1" class="agent-card bg-white p-4 rounded-xl card-shadow flex items-center justify-between border-2 border-transparent">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm">
-                  <i class="fas fa-user-tie"></i>
+        <form id="paymentForm" class="space-y-5">
+            
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">EcoCash Subscriber Number</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">+263</span>
+                    <input type="tel" id="phone" required placeholder="771234567" 
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 pl-16 pr-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm">
                 </div>
-                <div>
-                  <h4 class="text-sm font-bold text-gray-900">Afrilink Data Systems</h4>
-                  <p class="text-[11px] text-green-600 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-green-500 block"></span> Instant Auto-Route</p>
-                </div>
-              </div>
-              <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-md font-medium">Active</span>
             </div>
 
-            <div onclick="selectAgent('agent2', 'ZimSpeed Infrastructure')" id="agent-agent2" class="agent-card bg-white p-4 rounded-
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Choose Your Subscription Tier</label>
+                <select id="planId" required 
+                    class="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm appearance-none">
+                    <option value="" disabled selected>Select a plan...</option>
+                    <option value="residential">Standard Residential — $30/mo</option>
+                    <option value="roam">Regional Roam (Travel) — $50/mo</option>
+                    <option value="business">Priority Business — $100/mo</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Target Distribution Province/Region</label>
+                <select id="location" required 
+                    class="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm">
+                    <option value="" disabled selected>Select your region...</option>
+                    <option value="Harare">Harare</option>
+                    <option value="Bulawayo">Bulawayo</option>
+                    <option value="Manicaland">Manicaland</option>
+                    <option value="Mashonaland Central">Mashonaland Central</option>
+                    <option value="Mashonaland East">Mashonaland East</option>
+                    <option value="Mashonaland West">Mashonaland West</option>
+                    <option value="Masvingo">Masvingo</option>
+                    <option value="Matabeleland North">Matabeleland North</option>
+                    <option value="Matabeleland South">Matabeleland South</option>
+                    <option value="Midlands">Midlands</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Assigned Fulfillment Administrator</label>
+                <input type="text" id="agent" required placeholder="e.g. Agent Admin / Portal" 
+                    class="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 px-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">EcoCash Confirmation SMS Content</label>
+                <textarea id="paymentCodeString" required rows="3" placeholder="Paste the full EcoCash approval message here..." 
+                    class="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 px-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm resize-none"></textarea>
+            </div>
+
+            <button type="submit" id="submitBtn"
+                class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-4 rounded-xl shadow-lg shadow-blue-600/20 transition-all duration-150 transform active:scale-[0.98] text-sm mt-2">
+                Verify & Activate Connection
+            </button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const banner = document.getElementById('statusBanner');
+            
+            // UI Loading State
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Processing Verification Matrix...";
+            banner.classList.add('hidden');
+
+            // Gather inputs matching backend Pydantic fields
+            const payload = {
+                phone: document.getElementById('phone').value.trim(),
+                location: document.getElementById('location').value,
+                planId: document.getElementById('planId').value,
+                agent: document.getElementById('agent').value.trim(),
+                paymentCodeString: document.getElementById('paymentCodeString').value.trim()
+            };
+
+            try {
+                // Using a safe relative URL path for unified Render environment execution
+                const response = await fetch('/api/ecocash/verify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    banner.className = "mb-6 p-4 rounded-xl text-sm font-medium text-center bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                    banner.innerText = "✅ Success! Verification complete. Telemetry data dispatched to Telegram.";
+                    document.getElementById('paymentForm').reset();
+                } else {
+                    throw new Error(result.detail || "Server pipeline error during fulfillment verification.");
+                }
+
+            } catch (error) {
+                banner.className = "mb-6 p-4 rounded-xl text-sm font-medium text-center bg-rose-500/10 text-rose-400 border border-rose-500/20";
+                banner.innerText = `❌ Error: ${error.message}`;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Verify & Activate Connection";
+                banner.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
