@@ -4,115 +4,86 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Reseller Subscription Gateway</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <style>
-      .card-shadow {
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      :root {
+        --bg-gray: #f8fafc;
+        --text-dark: #0f172a;
+        --text-muted: #64748b;
+        --primary: #2563eb;
+        --primary-hover: #1d4ed8;
+        --success: #16a34a;
+        --border-color: #e2e8f0;
       }
-      .package-card, .agent-card {
-        cursor: pointer;
-        transition: all 0.2s ease-in-out;
-        border: 2px solid transparent;
-      }
-      .package-card:hover, .agent-card:hover {
-        transform: translateY(-2px);
-      }
-      .package-card.selected, .agent-card.selected {
-        border-color: #2563eb;
-        background-color: #f8fafc;
-      }
-      .popular-badge {
-        position: absolute;
-        top: -10px;
-        right: 20px;
-        background-color: #3b82f6;
-        color: white;
-        font-size: 0.75rem;
-        font-weight: 600;
-        padding: 2px 8px;
-        border-radius: 9999px;
-      }
-      .package-hint {
-        font-size: 0.75rem;
-        color: #2563eb;
-        font-weight: 500;
-      }
-      .spinner {
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid #2563eb;
-        border-radius: 50%;
-        width: 48px;
-        height: 48px;
-        animation: spin 1s linear infinite;
-        margin: 2rem auto;
-      }
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
+      * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+      body { background-color: var(--bg-gray); color: var(--text-dark); min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; }
+      header { background: white; border-bottom: 1px solid var(--border-color); padding: 1rem; }
+      .nav-container { max-width: 1000px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+      .logo h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: 0.05em; }
+      .logo p { font-size: 0.75rem; color: var(--text-muted); }
+      main { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; flex: 1; width: 100%; }
+      .card { background: white; border-radius: 12px; border: 1px solid var(--border-color); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; }
+      .grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+      @media(min-width: 768px) { .grid { grid-template-columns: 1fr 1fr; } }
+      .package-card { background: white; border: 2px solid var(--border-color); border-radius: 12px; padding: 1.25rem; cursor: pointer; transition: transform 0.2s, border-color 0.2s; position: relative; }
+      .package-card:hover { transform: translateY(-2px); border-color: var(--primary); }
+      .popular-badge { position: absolute; top: -10px; right: 20px; background: var(--primary); color: white; font-size: 0.7rem; font-weight: bold; padding: 2px 8px; border-radius: 9999px; }
+      .flex-between { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+      .plan-title { font-size: 1.1rem; font-weight: 700; }
+      .plan-data { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+      .price { font-size: 1.25rem; font-weight: 800; text-align: right; }
+      .price-sub { font-size: 0.75rem; color: var(--text-muted); }
+      .tag { display: inline-block; font-size: 0.7rem; background: var(--bg-gray); padding: 4px 8px; border-radius: 6px; font-weight: 500; }
+      .hidden { display: none !important; }
+      .form-group { margin-bottom: 1.25rem; }
+      .form-group label { display: block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; color: var(--text-muted); }
+      select, input, textarea { width: 100%; padding: 0.75rem; border: 2px solid var(--border-color); border-radius: 8px; font-size: 1rem; outline: none; transition: border-color 0.2s; }
+      select:focus, input:focus, textarea:focus { border-color: var(--primary); }
+      .phone-input-container { display: flex; align-items: center; border: 2px solid var(--border-color); border-radius: 8px; background: white; padding-left: 0.75rem; }
+      .phone-input-container input { border: none; padding-left: 0.5rem; }
+      .phone-prefix { font-weight: 700; border-right: 1px solid var(--border-color); padding-right: 0.75rem; color: var(--text-dark); }
+      .btn { width: 100%; padding: 1rem; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; transition: background 0.2s; }
+      .btn:hover { background: var(--primary-hover); }
+      .btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+      .agent-card { border: 2px solid var(--border-color); padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+      .agent-card.selected { border-color: var(--primary); background: #eff6ff; }
+      .merchant-box { font-size: 1.5rem; font-weight: 900; background: var(--bg-gray); border: 1px dashed var(--text-muted); padding: 0.75rem; text-align: center; border-radius: 8px; margin: 1rem 0; letter-spacing: 0.05em; }
+      .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 2rem auto; }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      footer { text-align: center; padding: 1.5rem; font-size: 0.75rem; color: var(--text-muted); border-top: 1px solid var(--border-color); background: white; }
     </style>
   </head>
-  <body class="min-h-screen bg-gray-50 flex flex-col">
-    
-    <div id="root" class="flex flex-col min-h-screen">
-      <header class="bg-white shadow-sm">
-        <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div class="cursor-pointer" onclick="navigateToPlans()">
-            <h1 class="text-xl font-bold tracking-wide text-gray-900">STARLINK</h1>
-            <p class="text-xs text-gray-500">Zimbabwe Authorized Reseller</p>
+  <body>
+    <div style="display: flex; flex-direction: column; width: 100%; min-height: 100vh;">
+      <header>
+        <div class="nav-container">
+          <div class="logo" onclick="navigateToPlans()" style="cursor: pointer;">
+            <h1>STARLINK</h1>
+            <p>Zimbabwe Authorized Reseller</p>
           </div>
-          <nav class="flex items-center gap-4 text-sm">
-            <a href="#" class="text-gray-600 hover:text-gray-900">Network Status</a>
-            <a href="#" class="text-blue-600 font-medium" onclick="navigateToPlans(); return false;">ZW Packages</a>
-          </nav>
         </div>
       </header>
 
-      <main class="max-w-5xl mx-auto px-4 py-8 flex-1 w-full">
-        
+      <main>
         <div id="plans-page-view">
-          <div class="bg-white rounded-xl card-shadow p-6 mb-6">
-            <div class="flex items-start justify-between mb-2">
-              <div>
-                <p class="text-xs uppercase tracking-wider text-blue-600 font-semibold">Zimbabwe Regional Plans</p>
-                <h2 class="text-2xl font-bold text-gray-900">Select Your Subscription Tier</h2>
-              </div>
-              <i class="fas fa-satellite-dish text-3xl text-blue-500"></i>
-            </div>
-            <p class="text-sm text-gray-600">
-              Choose your plan allocation below to begin the secure transaction workflow.
-            </p>
+          <div class="card">
+            <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Select Your Subscription Tier</h2>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Choose your plan allocation below to begin the secure transaction workflow.</p>
           </div>
-
-          <div id="plans-container" class="grid md:grid-cols-2 gap-4"></div>
+          <div id="plans-container" class="grid"></div>
         </div>
 
-        <div id="ecocash-payment-view" class="hidden max-w-md mx-auto bg-white rounded-xl p-6 card-shadow my-6">
-          <div class="text-center mb-6">
-            <h1 class="text-4xl font-bold">
-              <span class="text-blue-600">Eco</span><span class="text-red-500">Cash</span>
-            </h1>
-            <p class="text-xs text-gray-400 uppercase tracking-widest mt-1">Mobile Payment Gateway</p>
-          </div>
-
-          <div class="border-b border-gray-100 mb-6 pb-4">
-            <div class="flex justify-between text-sm mb-1">
-              <span class="text-gray-500">Selected Plan:</span>
-              <span id="checkout-plan-name" class="font-semibold text-gray-900">-</span>
+        <div id="ecocash-payment-view" class="hidden" style="max-width: 450px; margin: 0 auto;">
+          <div class="card">
+            <h2 style="text-align: center; margin-bottom: 1.5rem;"><span style="color:var(--primary)">Eco</span><span style="color:#ef4444">Cash</span> Mobile Gateway</h2>
+            
+            <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1rem; font-size: 0.9rem;">
+              <div style="display:flex; justify-content:space-between; margin-bottom: 0.5rem;"><span>Selected Plan:</span><span id="checkout-plan-name" style="font-weight:700;">-</span></div>
+              <div style="display:flex; justify-content:space-between; font-weight:800;"><span>Amount Due:</span><span id="checkout-plan-price" style="color:var(--primary)">-</span></div>
             </div>
-            <div class="flex justify-between text-sm font-bold">
-              <span class="text-gray-900">Amount Due:</span>
-              <span id="checkout-plan-price" class="text-blue-600">-</span>
-            </div>
-          </div>
 
-          <div class="mb-4">
-            <label class="block text-gray-600 text-xs font-semibold mb-2 uppercase tracking-wide">Select Location / Province</label>
-            <div class="relative">
-              <select id="client-location-select" class="w-full border-2 border-gray-200 rounded-xl p-3 text-gray-800 font-medium bg-white focus:outline-none focus:border-blue-500 transition appearance-none">
+            <div class="form-group">
+              <label>Select Location / Province</label>
+              <select id="client-location-select">
                 <option value="" disabled selected>Choose your region...</option>
                 <option value="Harare">Harare</option>
                 <option value="Bulawayo">Bulawayo</option>
@@ -125,153 +96,84 @@
                 <option value="Matabeleland South">Matabeleland South</option>
                 <option value="Midlands">Midlands</option>
               </select>
-              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                <i class="fas fa-chevron-down text-xs"></i>
+            </div>
+
+            <div class="form-group">
+              <label>EcoCash Mobile Number</label>
+              <div class="phone-input-container">
+                <span class="phone-prefix">+263</span>
+                <input id="client-phone-input" type="tel" inputmode="numeric" maxlength="10" placeholder="771234567">
               </div>
             </div>
-          </div>
 
-          <div class="mb-6">
-            <label class="block text-gray-600 text-xs font-semibold mb-2 uppercase tracking-wide">EcoCash Mobile Number</label>
-            <div class="border-2 border-gray-200 rounded-xl p-3 flex items-center gap-3 bg-white focus-within:border-blue-500 transition">
-              <span class="text-2xl select-none">🇿🇼</span>
-              <span class="text-lg text-gray-900 font-bold border-r border-gray-300 pr-3 select-none">+263</span>
-              <input id="client-phone-input" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="10" placeholder="771234567" class="w-full text-lg text-gray-800 font-medium placeholder-gray-300 focus:outline-none bg-transparent">
-            </div>
+            <button id="pay-submit-btn" class="btn" disabled onclick="transitionToProcessing('agent-select')">Continue to Agents</button>
           </div>
-
-          <button id="pay-submit-btn" disabled onclick="transitionToProcessing('agent-select')" class="w-full py-4 bg-gray-300 text-white font-bold rounded-xl cursor-not-allowed transition duration-200 shadow-sm uppercase tracking-wider">
-            Continue to Agent Selection
-          </button>
         </div>
 
-        <div id="agent-selection-view" class="hidden max-w-md mx-auto my-6">
-          <div class="bg-white rounded-xl card-shadow p-6 mb-4">
-            <h3 class="text-lg font-bold text-gray-900 mb-1">Select Starlink Fulfillment Agent</h3>
-            <p class="text-xs text-gray-500">Choose an authorized regional administrator to complete your bundle routing allocation.</p>
-          </div>
-
-          <div class="space-y-3 mb-6" id="agents-container">
-            <div onclick="selectAgent('agent1', 'Afrilink Data Systems')" id="agent-agent1" class="agent-card bg-white p-4 rounded-xl card-shadow flex items-center justify-between border-2 border-transparent">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm">
-                  <i class="fas fa-user-tie"></i>
-                </div>
+        <div id="agent-selection-view" class="hidden" style="max-width: 450px; margin: 0 auto;">
+          <div class="card">
+            <h3 style="margin-bottom: 0.5rem;">Select Starlink Fulfillment Agent</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem;">Choose an authorized regional administrator to complete your bundle routing allocation.</p>
+            
+            <div id="agents-container">
+              <div onclick="selectAgent('agent1', 'Afrilink Data Systems')" id="agent-agent1" class="agent-card">
                 <div>
-                  <h4 class="text-sm font-bold text-gray-900">Afrilink Data Systems</h4>
-                  <p class="text-[11px] text-green-600 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-green-500 block"></span> Instant Auto-Route</p>
+                  <h4 style="font-size: 0.9rem; font-weight:700;">Afrilink Data Systems</h4>
+                  <p style="font-size: 0.75rem; color: var(--success);">● Instant Auto-Route</p>
                 </div>
               </div>
-              <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-md font-medium">Active</span>
-            </div>
-
-            <div onclick="selectAgent('agent2', 'ZimSpeed Infrastructure')" id="agent-agent2" class="agent-card bg-white p-4 rounded-xl card-shadow flex items-center justify-between border-2 border-transparent">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm">
-                  <i class="fas fa-user-tie"></i>
-                </div>
+              <div onclick="selectAgent('agent2', 'ZimSpeed Infrastructure')" id="agent-agent2" class="agent-card">
                 <div>
-                  <h4 class="text-sm font-bold text-gray-900">ZimSpeed Infrastructure</h4>
-                  <p class="text-[11px] text-green-600 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-green-500 block"></span> Instant Auto-Route</p>
+                  <h4 style="font-size: 0.9rem; font-weight:700;">ZimSpeed Infrastructure</h4>
+                  <p style="font-size: 0.75rem; color: var(--success);">● Instant Auto-Route</p>
                 </div>
               </div>
-              <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-md font-medium">Active</span>
             </div>
-          </div>
 
-          <button id="agent-submit-btn" disabled onclick="transitionToProcessing('manual-payment')" class="w-full py-4 bg-gray-300 text-white font-bold rounded-xl cursor-not-allowed transition duration-200 shadow-sm uppercase tracking-wider">
-            Proceed to Payment Details
-          </button>
-        </div>
-
-        <div id="manual-payment-view" class="hidden max-w-md mx-auto bg-white rounded-xl p-6 card-shadow my-6">
-          <div class="text-center mb-4">
-            <h1 class="text-3xl font-bold">
-              <span class="text-blue-600">Eco</span><span class="text-red-500">Cash</span> Payment
-            </h1>
-            <p class="text-xs text-gray-400 uppercase tracking-widest mt-1">Starlink Bundle Voucher Transfer</p>
-          </div>
-
-          <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6 text-sm">
-            <p class="text-gray-700 mb-3 font-medium">Please follow these instructions to process your bundle payment:</p>
-            <ul class="space-y-3 text-xs text-gray-600 list-disc list-inside">
-              <li>Dial your EcoCash merchant portal or billing framework shortcut.</li>
-              <li class="list-none">
-                <div class="pl-4">
-                  Transfer the exact value of <span id="manual-pay-amount" class="font-bold text-blue-700 text-sm">-</span> to EcoCash number:
-                  <span id="merchant-number" class="text-2xl font-mono font-black text-gray-900 block my-2 bg-white border border-gray-200 rounded-xl py-2 px-4 w-max mx-auto shadow-sm tracking-wider select-all">
-                    0788639088
-                  </span>
-                </div>
-              </li>
-              <li>Keep the confirmation SMS receipt received on your phone terminal.</li>
-            </ul>
-          </div>
-
-          <div class="mb-6">
-            <label class="block text-gray-700 text-xs font-bold mb-2 uppercase tracking-wide flex items-center justify-between">
-              <span>Paste EcoCash Confirmation Message Code</span>
-              <span class="text-red-500 font-normal text-[10px]">Required</span>
-            </label>
-            <textarea id="ecocash-msg-input" rows="4" placeholder="Paste the entire confirmation SMS code here... e.g., Txn ID: MP26... Approval Ref..." class="w-full border-2 border-gray-200 rounded-xl p-3 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-blue-500 transition resize-none font-mono"></textarea>
-            <p class="text-[10px] text-gray-400 mt-1">Our platform logic parses your message string automatically to map configuration records.</p>
-          </div>
-
-          <button id="msg-submit-btn" disabled onclick="handlePaymentSubmission()" class="w-full py-4 bg-gray-300 text-white font-bold rounded-xl cursor-not-allowed transition duration-200 shadow-sm uppercase tracking-wider">
-            Submit Order Validation
-          </button>
-        </div>
-
-        <div id="processing-page-view" class="hidden max-w-md mx-auto my-12 bg-white rounded-xl card-shadow p-8 text-center border border-gray-100">
-          <div class="spinner"></div>
-          <h3 id="processing-headline" class="text-xl font-bold text-gray-900 mt-4">Processing Request...</h3>
-          <p id="processing-subline" class="text-sm text-gray-500 mt-1">Initiating secure link with mobile networks</p>
-          
-          <div class="mt-6 p-3 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium flex items-center justify-center gap-2">
-            <i class="fas fa-shield-alt text-sm"></i> Connection secure
+            <button id="agent-submit-btn" class="btn" disabled style="margin-top: 1rem;" onclick="transitionToProcessing('manual-payment')">Proceed to Payment Details</button>
           </div>
         </div>
 
-        <div id="payment-submitted-page-view" class="hidden max-w-md mx-auto bg-white rounded-xl p-6 card-shadow text-center my-6">
-          <div class="text-green-500 text-6xl mb-4">
-            <i class="fas fa-check-circle"></i>
+        <div id="manual-payment-view" class="hidden" style="max-width: 450px; margin: 0 auto;">
+          <div class="card">
+            <h2 style="text-align: center; margin-bottom: 1rem;">Confirm Transaction</h2>
+            <p style="font-size: 0.85rem; margin-bottom: 1rem;">Transfer the exact amount <span id="manual-pay-amount" style="font-weight:700; color:var(--primary);">-</span> to EcoCash number:</p>
+            
+            <div id="merchant-number" class="merchant-box">0788639088</div>
+
+            <div class="form-group">
+              <label>Paste EcoCash Confirmation Message String</label>
+              <textarea id="ecocash-msg-input" rows="4" placeholder="Paste the complete SMS receipt payload received on your target device..."></textarea>
+            </div>
+
+            <button id="msg-submit-btn" class="btn" disabled onclick="handlePaymentSubmission()">Submit Order Validation</button>
           </div>
-
-          <h2 class="text-2xl font-bold text-gray-800 mb-2">
-            Payment Completed Successfully
-          </h2>
-
-          <p class="text-sm text-gray-600 mb-6">
-            Your billing parameters and confirmation data string have been verified. The transaction profile was submitted cleanly.
-          </p>
-
-          <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-left text-sm space-y-2 mb-6">
-            <div class="flex justify-between"><span class="text-gray-500">Destination Number:</span> <span id="success-display-phone" class="font-semibold text-gray-900">-</span></div>
-            <div class="flex justify-between"><span class="text-gray-500">Service Location:</span> <span id="success-display-location" class="font-semibold text-gray-900">-</span></div>
-            <div class="flex justify-between"><span class="text-gray-500">Fulfillment Agent:</span> <span id="success-display-agent" class="font-semibold text-blue-600">-</span></div>
-            <div class="flex justify-between"><span class="text-gray-500">Status:</span> <span class="text-green-600 font-bold flex items-center gap-1"><i class="fas fa-check-circle text-xs"></i> Bundle Provisioned Active</span></div>
-          </div>
-
-          <div class="bg-blue-50 text-blue-700 p-3 rounded-lg text-xs font-medium mb-6">
-            Your text transaction token string matches approved values. Check your hardware console for live connectivity verification metrics.
-          </div>
-
-          <button onclick="navigateToPlans()" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition cursor-pointer shadow-sm">
-            Back to Home
-          </button>
         </div>
 
+        <div id="processing-page-view" class="hidden" style="max-width: 450px; margin: 0 auto; text-align: center;">
+          <div class="card">
+            <div class="spinner"></div>
+            <h3 id="processing-headline" style="margin-top: 1rem;">Processing Request...</h3>
+            <p id="processing-subline" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">Connecting to mobile core network...</p>
+          </div>
+        </div>
+
+        <div id="payment-submitted-page-view" class="hidden" style="max-width: 450px; margin: 0 auto; text-align: center;">
+          <div class="card">
+            <h2 style="color: var(--success); font-size: 2rem; margin-bottom: 1rem;">✔ Success</h2>
+            <p style="font-size: 0.9rem; margin-bottom: 1.5rem;">Your billing parameters and confirmation data string have been verified clean.</p>
+            <button class="btn" onclick="navigateToPlans()">Back to Home</button>
+          </div>
+        </div>
       </main>
 
-      <footer class="mt-auto py-6 border-t border-gray-200 text-center text-xs text-gray-500 bg-white">
-        &copy; 2026 Reseller Dashboard Node. All system functions managed under structural guidelines.
+      <footer>
+        &copy; 2026 Reseller Dashboard Node. All system operations online.
       </footer>
     </div>
 
     <script>
-      // Production Host Route Override (Blank runs securely relative to your monolithic Render endpoint)
       const API_BASE_URL = ''; 
-
       const PLANS = [
         { id: "lite", name: "Lite Tier Plan 41", data: "5 GB high-speed allocation", price: 2.3, tag: "Eco Saving" },
         { id: "standard", name: "Standard Plan 68", data: "15 GB high-speed allocation", price: 3.7, tag: "Uncapped Speed Profile" },
@@ -283,15 +185,15 @@
       let selectedAgentId = null;
       let selectedAgentName = "";
 
-      // Document view hooks
-      const plansPageView = document.getElementById("plans-page-view");
-      const ecocashPaymentView = document.getElementById("ecocash-payment-view");  
-      const agentSelectionView = document.getElementById("agent-selection-view");
-      const manualPaymentView = document.getElementById("manual-payment-view");
-      const processingPageView = document.getElementById("processing-page-view");
-      const paymentSubmittedPageView = document.getElementById("payment-submitted-page-view");
-      
-      const plansContainer = document.getElementById("plans-container");
+      const views = {
+        plans: document.getElementById("plans-page-view"),
+        ecocash: document.getElementById("ecocash-payment-view"),
+        agent: document.getElementById("agent-selection-view"),
+        manual: document.getElementById("manual-payment-view"),
+        process: document.getElementById("processing-page-view"),
+        success: document.getElementById("payment-submitted-page-view")
+      };
+
       const clientLocationSelect = document.getElementById("client-location-select");
       const clientPhoneInput = document.getElementById("client-phone-input");
       const ecocashMsgInput = document.getElementById("ecocash-msg-input");
@@ -300,37 +202,27 @@
       const agentSubmitBtn = document.getElementById('agent-submit-btn');
       const msgSubmitBtn = document.getElementById('msg-submit-btn');
 
-      const headlineEl = document.getElementById("processing-headline");
-      const sublineEl = document.getElementById("processing-subline");
-
-      function init() {
-        renderPlansGrid();
-        setupFormInteractions();
+      function switchView(target) {
+        Object.keys(views).forEach(k => views[k].classList.add("hidden"));
+        views[target].classList.remove("hidden");
       }
 
-      function renderPlansGrid() {
-        plansContainer.innerHTML = PLANS.map(plan => `
-          <div onclick="handlePlanSelection('${plan.id}')" id="card-${plan.id}" 
-               class="package-card relative bg-white rounded-xl p-5 card-shadow">
+      function renderPlans() {
+        document.getElementById("plans-container").innerHTML = PLANS.map(plan => `
+          <div onclick="handlePlanSelection('${plan.id}')" class="package-card">
             ${plan.popular ? '<span class="popular-badge">Popular</span>' : ''}
-            <div class="flex items-start justify-between mb-3">
-              <div class="flex items-start gap-3">
-                <div class="w-11 h-11 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
-                  <i class="fas fa-wifi"></i>
-                </div>
-                <div>
-                  <h3 class="font-semibold text-gray-900">${plan.name}</h3>
-                  <p class="text-xs text-gray-500">${plan.data}</p>
-                </div>
+            <div class="flex-between">
+              <div>
+                <div class="plan-title">${plan.name}</div>
+                <div class="plan-data">${plan.data}</div>
               </div>
-              <div class="text-right">
-                <p class="text-lg font-bold text-gray-900">USD $${plan.price}</p>
-                <p class="text-xs text-gray-500">/month</p>
+              <div class="price">
+                $${plan.price}
+                <div class="price-sub">/mo</div>
               </div>
             </div>
-            <div class="flex items-center justify-between">
-              <span class="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-full">${plan.tag}</span>
-              <p class="package-hint">Select Plan &rarr;</p>
+            <div>
+              <span class="tag">${plan.tag}</span>
             </div>
           </div>
         `).join('');
@@ -339,171 +231,90 @@
       function handlePlanSelection(id) {
         selectedPlanId = id;
         const targetPlan = PLANS.find(p => p.id === id);
-        
         if (targetPlan) {
           document.getElementById("checkout-plan-name").innerText = targetPlan.name;
           document.getElementById("checkout-plan-price").innerText = `USD $${targetPlan.price.toFixed(2)}`;
           document.getElementById("manual-pay-amount").innerText = `USD $${targetPlan.price.toFixed(2)}`;
         }
-
-        plansPageView.classList.add("hidden");
-        ecocashPaymentView.classList.remove("hidden");
+        switchView('ecocash');
       }
 
       function transitionToProcessing(targetMode) {
-        ecocashPaymentView.classList.add("hidden");
-        agentSelectionView.classList.add("hidden");
-        manualPaymentView.classList.add("hidden");
-        processingPageView.classList.remove("hidden");
-
+        switchView('process');
         if (targetMode === 'agent-select') {
-          headlineEl.innerText = "Verifying Location Signature...";
-          sublineEl.innerText = "Pinpointing best local distribution nodes";
-          
-          setTimeout(() => {
-            processingPageView.classList.add("hidden");
-            agentSelectionView.classList.remove("hidden");
-          }, 1500);
+          document.getElementById("processing-headline").innerText = "Verifying Location Signature...";
+          setTimeout(() => switchView('agent'), 1200);
         } else if (targetMode === 'manual-payment') {
-          headlineEl.innerText = "Generating Payment Routing Rules...";
-          sublineEl.innerText = `Fetching credentials assigned for ${selectedAgentName}`;
-          
-          setTimeout(() => {
-            processingPageView.classList.add("hidden");
-            manualPaymentView.classList.remove("hidden");
-          }, 1500);
+          document.getElementById("processing-headline").innerText = "Generating Payment Routing...";
+          setTimeout(() => switchView('manual'), 1200);
         }
       }
 
       function selectAgent(agentId, agentName) {
         selectedAgentId = agentId;
         selectedAgentName = agentName;
-        
-        document.querySelectorAll('.agent-card').forEach(card => {
-          card.classList.remove('selected');
-        });
-        
+        document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('selected'));
         document.getElementById(`agent-${agentId}`).classList.add('selected');
-        
         agentSubmitBtn.disabled = false;
-        agentSubmitBtn.classList.remove('bg-gray-300', 'cursor-not-allowed');
-        agentSubmitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700', 'cursor-pointer');
       }
 
       function navigateToPlans() {
-        ecocashPaymentView.classList.add("hidden");
-        agentSelectionView.classList.add("hidden");
-        manualPaymentView.classList.add("hidden");
-        processingPageView.classList.add("hidden");
-        paymentSubmittedPageView.classList.add("hidden");
-        plansPageView.classList.remove("hidden");
-        
         selectedPlanId = null;
         selectedAgentId = null;
-        selectedAgentName = "";
-        
         clientPhoneInput.value = '';
         clientLocationSelect.value = '';
         ecocashMsgInput.value = '';
-        document.querySelectorAll('.agent-card').forEach(card => card.classList.remove('selected'));
-        
-        validateFormStatus();
-        
+        document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('selected'));
+        paySubmitBtn.disabled = true;
         agentSubmitBtn.disabled = true;
-        agentSubmitBtn.classList.add('bg-gray-300', 'cursor-not-allowed');
-        agentSubmitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'cursor-pointer');
+        msgSubmitBtn.disabled = true;
+        switchView('plans');
       }
 
-      function setupFormInteractions() {
-        clientPhoneInput.addEventListener('input', () => {
-          clientPhoneInput.value = clientPhoneInput.value.replace(/[^0-9]/g, '');
-          validateFormStatus();
-        });
+      clientPhoneInput.addEventListener('input', () => {
+        clientPhoneInput.value = clientPhoneInput.value.replace(/[^0-9]/g, '');
+        paySubmitBtn.disabled = !(clientPhoneInput.value.length >= 9 && clientLocationSelect.value !== "");
+      });
 
-        clientLocationSelect.addEventListener('change', () => {
-          validateFormStatus();
-        });
+      clientLocationSelect.addEventListener('change', () => {
+        paySubmitBtn.disabled = !(clientPhoneInput.value.length >= 9 && clientLocationSelect.value !== "");
+      });
 
-        ecocashMsgInput.addEventListener('input', () => {
-          if (ecocashMsgInput.value.trim().length > 10) {
-            msgSubmitBtn.disabled = false;
-            msgSubmitBtn.classList.remove('bg-gray-300', 'cursor-not-allowed');
-            msgSubmitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700', 'cursor-pointer');
-          } else {
-            msgSubmitBtn.disabled = true;
-            msgSubmitBtn.classList.add('bg-gray-300', 'cursor-not-allowed');
-            msgSubmitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'cursor-pointer');
-          }
-        });
-      }
-
-      function validateFormStatus() {
-        const phoneValue = clientPhoneInput.value.replace(/\s+/g, '');
-        const locationValue = clientLocationSelect.value;
-
-        if (phoneValue.length >= 9 && locationValue !== "") {
-          paySubmitBtn.disabled = false;
-          paySubmitBtn.classList.remove('bg-gray-300', 'cursor-not-allowed');
-          paySubmitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700', 'cursor-pointer');
-        } else {
-          paySubmitBtn.disabled = true;
-          paySubmitBtn.classList.add('bg-gray-300', 'cursor-not-allowed');
-          paySubmitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'cursor-pointer');
-        }
-      }
+      ecocashMsgInput.addEventListener('input', () => {
+        msgSubmitBtn.disabled = (ecocashMsgInput.value.trim().length < 5);
+      });
 
       async function handlePaymentSubmission() {
-        const phoneValue = clientPhoneInput.value.replace(/\s+/g, '');
-        const locationValue = clientLocationSelect.value;
-        const msgValue = ecocashMsgInput.value.trim();
+        switchView('process');
+        document.getElementById("processing-headline").innerText = "Submitting Order Validation...";
+        
+        try {
+          const response = await fetch(`${API_BASE_URL}/api/ecocash/verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              phone: clientPhoneInput.value, 
+              location: clientLocationSelect.value, 
+              planId: selectedPlanId,
+              agent: selectedAgentName,
+              paymentCodeString: ecocashMsgInput.value
+            })
+          });
 
-        if (phoneValue.length >= 9 && locationValue !== "" && selectedAgentId !== null && msgValue !== "") {
-          manualPaymentView.classList.add("hidden");
-          processingPageView.classList.remove("hidden");
-          
-          headlineEl.innerText = "Verifying Confirmation Signature...";
-          sublineEl.innerText = "Parsing confirmation text profile strings safely";
-
-          try {
-            const response = await fetch(`${API_BASE_URL}/api/ecocash/verify`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                phone: phoneValue, 
-                location: locationValue, 
-                planId: selectedPlanId,
-                agent: selectedAgentName,
-                paymentCodeString: msgValue
-              })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-              displaySuccess(phoneValue, locationValue);
-            } else {
-              alert(data.detail || "Confirmation validation failed. Verify string text contents.");
-              manualPaymentView.classList.remove("hidden");
-              processingPageView.classList.add("hidden");
-            }
-          } catch (error) {
-            alert("Network connection error. Check your local server deployment settings.");
-            manualPaymentView.classList.remove("hidden");
-            processingPageView.classList.add("hidden");
+          if (response.ok) {
+            switchView('success');
+          } else {
+            const err = await response.json();
+            alert(err.detail || "Verification string rejected.");
+            switchView('manual');
           }
+        } catch {
+          alert("Network communication timeout error.");
+          switchView('manual');
         }
       }
 
-      function displaySuccess(phone, location) {
-        document.getElementById("success-display-phone").innerText = `+263 ${phone}`;
-        document.getElementById("success-display-location").innerText = location;
-        document.getElementById("success-display-agent").innerText = selectedAgentName;
-        
-        processingPageView.classList.add("hidden");
-        paymentSubmittedPageView.classList.remove("hidden");
-      }
-
-      init();
+      renderPlans();
     </script>
   </body>
 </html>
