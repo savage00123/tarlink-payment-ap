@@ -173,7 +173,11 @@
     </div>
 
     <script>
-      const API_BASE_URL = ''; 
+      // Automatically detect environment base URL
+      const API_BASE_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+        ? "http://127.0.0.1:8000" 
+        : window.location.origin;
+
       const PLANS = [
         { id: "lite", name: "Lite Tier Plan 41", data: "5 GB high-speed allocation", price: 2.3, tag: "Eco Saving" },
         { id: "standard", name: "Standard Plan 68", data: "15 GB high-speed allocation", price: 3.7, tag: "Uncapped Speed Profile" },
@@ -308,8 +312,9 @@
             alert(err.detail || "Verification string rejected.");
             switchView('manual');
           }
-        } catch {
-          alert("Network communication timeout error.");
+        } catch (e) {
+          console.error("Fetch Exception Details:", e);
+          alert("Network communication error. Check your browser console log attributes.");
           switchView('manual');
         }
       }
