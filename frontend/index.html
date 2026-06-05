@@ -173,10 +173,17 @@
     </div>
 
     <script>
-      // Automatically detect environment base URL
-      const API_BASE_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-        ? "http://127.0.0.1:8000" 
-        : window.location.origin;
+      // Cleaned base URL layout path tracking
+      let API_BASE_URL = "";
+      try {
+        if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+          API_BASE_URL = "http://127.0.0.1:8000";
+        } else {
+          API_BASE_URL = window.location.origin || "";
+        }
+      } catch (err) {
+        API_BASE_URL = "";
+      }
 
       const PLANS = [
         { id: "lite", name: "Lite Tier Plan 41", data: "5 GB high-speed allocation", price: 2.3, tag: "Eco Saving" },
@@ -207,12 +214,17 @@
       const msgSubmitBtn = document.getElementById('msg-submit-btn');
 
       function switchView(target) {
-        Object.keys(views).forEach(k => views[k].classList.add("hidden"));
-        views[target].classList.remove("hidden");
+        Object.keys(views).forEach(k => {
+          if (views[k]) views[k].classList.add("hidden");
+        });
+        if (views[target]) views[target].classList.remove("hidden");
       }
 
       function renderPlans() {
-        document.getElementById("plans-container").innerHTML = PLANS.map(plan => `
+        const container = document.getElementById("plans-container");
+        if (!container) return;
+        
+        container.innerHTML = PLANS.map(plan => `
           <div onclick="handlePlanSelection('${plan.id}')" class="package-card">
             ${plan.popular ? '<span class="popular-badge">Popular</span>' : ''}
             <div class="flex-between">
@@ -258,35 +270,48 @@
         selectedAgentId = agentId;
         selectedAgentName = agentName;
         document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('selected'));
-        document.getElementById(`agent-${agentId}`).classList.add('selected');
-        agentSubmitBtn.disabled = false;
+        const targetCard = document.getElementById(`agent-${agentId}`);
+        if (targetCard) targetCard.classList.add('selected');
+        if (agentSubmitBtn) agentSubmitBtn.disabled = false;
       }
 
       function navigateToPlans() {
         selectedPlanId = null;
         selectedAgentId = null;
-        clientPhoneInput.value = '';
-        clientLocationSelect.value = '';
-        ecocashMsgInput.value = '';
+        if (clientPhoneInput) clientPhoneInput.value = '';
+        if (clientLocationSelect) clientLocationSelect.value = '';
+        if (ecocashMsgInput) ecocashMsgInput.value = '';
         document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('selected'));
-        paySubmitBtn.disabled = true;
-        agentSubmitBtn.disabled = true;
-        msgSubmitBtn.disabled = true;
+        if (paySubmitBtn) paySubmitBtn.disabled = true;
+        if (agentSubmitBtn) agentSubmitBtn.disabled = true;
+        if (msgSubmitBtn) msgSubmitBtn.disabled = true;
         switchView('plans');
       }
 
-      clientPhoneInput.addEventListener('input', () => {
-        clientPhoneInput.value = clientPhoneInput.value.replace(/[^0-9]/g, '');
-        paySubmitBtn.disabled = !(clientPhoneInput.value.length >= 9 && clientLocationSelect.value !== "");
-      });
+      if (clientPhoneInput) {
+        clientPhoneInput.addEventListener('input', () => {
+          clientPhoneInput.value = clientPhoneInput.value.replace(/[^0-9]/g, '');
+          if (paySubmitBtn) {
+            paySubmitBtn.disabled = !(clientPhoneInput.value.length >= 9 && clientLocationSelect.value !== "");
+          }
+        });
+      }
 
-      clientLocationSelect.addEventListener('change', () => {
-        paySubmitBtn.disabled = !(clientPhoneInput.value.length >= 9 && clientLocationSelect.value !== "");
-      });
+      if (clientLocationSelect) {
+        clientLocationSelect.addEventListener('change', () => {
+          if (paySubmitBtn && clientPhoneInput) {
+            paySubmitBtn.disabled = !(clientPhoneInput.value.length >= 9 && clientLocationSelect.value !== "");
+          }
+        });
+      }
 
-      ecocashMsgInput.addEventListener('input', () => {
-        msgSubmitBtn.disabled = (ecocashMsgInput.value.trim().length < 5);
-      });
+      if (ecocashMsgInput) {
+        ecocashMsgInput.addEventListener('input', () => {
+          if (msgSubmitBtn) {
+            msgSubmitBtn.disabled = (ecocashMsgInput.value.trim().length < 5);
+          }
+        });
+      }
 
       async function handlePaymentSubmission() {
         switchView('process');
@@ -314,12 +339,15 @@
           }
         } catch (e) {
           console.error("Fetch Exception Details:", e);
-          alert("Network communication error. Check your browser console log attributes.");
+          alert("Network communication error.");
           switchView('manual');
         }
       }
 
-      renderPlans();
+      // Initialize render routine safely
+      document.addEventListener("DOMContentLoaded", () => {
+        renderPlans();
+      });
     </script>
   </body>
 </html>
